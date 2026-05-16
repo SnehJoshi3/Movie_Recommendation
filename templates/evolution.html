@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Evolution — Movie Matcher AI</title>
+    <meta name="description" content="Development journey of Movie Matcher AI — from Colab prototype to a full-stack Flask recommendation system.">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --red:     #e50914;
+            --red-dim: rgba(229,9,20,.15);
+            --gold:    #ffd700;
+            --green:   #46d369;
+            --blue:    cornflowerblue;
+            --purple:  #9b59b6;
+            --bg:      #080808;
+            --card:    #111;
+            --border:  #1e1e1e;
+            --dim:     #555;
+        }
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            background: var(--bg);
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            padding-top: 80px;
+            min-height: 100vh;
+        }
+
+        /* ── Navbar ── */
+        nav {
+            position: fixed; top: 0; width: 100%; height: 68px;
+            background: rgba(8,8,8,.97);
+            display: flex; align-items: center; justify-content: space-between;
+            padding: 0 5%; z-index: 1000;
+            border-bottom: 1px solid var(--border);
+            backdrop-filter: blur(10px);
+        }
+        .logo { color: var(--red); font-size: 1.5rem; font-weight: 900; text-decoration: none; letter-spacing: 1px; }
+        .nav-links { display: flex; gap: 26px; list-style: none; }
+        .nav-links a { color: #888; text-decoration: none; font-size: .88rem; font-weight: 500; transition: color .2s; }
+        .nav-links a:hover, .nav-links a.active { color: #fff; }
+        .nav-links a.active { border-bottom: 2px solid var(--red); padding-bottom: 3px; }
+
+        /* ── Corners ── */
+        .corner-h { position: fixed; top: 0; width: 90%; padding: 20px 5%; display: flex; justify-content: space-between; font-size: 10px; color: #2a2a2a; z-index: 999; pointer-events: none; }
+        .corner-f { position: fixed; bottom: 0; width: 100%; padding: 12px 5%; display: flex; justify-content: space-between; font-size: 10px; color: #333; background: var(--bg); border-top: 1px solid var(--border); z-index: 100; }
+
+        /* ── Page ── */
+        .page { max-width: 1100px; margin: 0 auto; padding: 50px 4% 100px; }
+
+        .page-header { border-left: 6px solid var(--red); padding-left: 20px; margin-bottom: 56px; }
+        .page-header h1 { font-size: 2.2rem; font-weight: 900; }
+        .page-header p  { color: var(--dim); font-size: .95rem; margin-top: 8px; line-height: 1.6; }
+
+        /* ── Section label ── */
+        .section-title {
+            font-size: .68rem; font-weight: 700; letter-spacing: 3px;
+            text-transform: uppercase; color: var(--red); margin: 60px 0 32px;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .section-title::after { content: ''; flex: 1; height: 1px; background: var(--border); }
+
+        /* ══════════════════════════════════════════════════════
+           TIMELINE
+        ══════════════════════════════════════════════════════ */
+        .timeline { position: relative; padding-left: 48px; }
+
+        /* Vertical line */
+        .timeline::before {
+            content: '';
+            position: absolute; left: 15px; top: 0; bottom: 0; width: 2px;
+            background: linear-gradient(to bottom, var(--red), transparent);
+        }
+
+        .phase {
+            position: relative;
+            background: var(--card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 30px 32px;
+            margin-bottom: 28px;
+            transition: transform .3s ease, border-color .3s ease, box-shadow .3s ease;
+            opacity: 0;
+            animation: slideIn .55s ease forwards;
+        }
+        .phase:hover {
+            transform: translateX(6px);
+            border-color: var(--red);
+            box-shadow: -4px 0 0 0 var(--red), 0 8px 32px rgba(229,9,20,.08);
+        }
+
+        /* Dot on the timeline */
+        .phase::before {
+            content: '';
+            position: absolute;
+            left: -41px; top: 32px;
+            width: 14px; height: 14px;
+            border-radius: 50%;
+            background: var(--red);
+            border: 3px solid var(--bg);
+            box-shadow: 0 0 0 2px var(--red);
+            transition: transform .3s;
+        }
+        .phase:hover::before { transform: scale(1.4); }
+
+        /* Phase number badge */
+        .phase-badge {
+            display: inline-flex; align-items: center; gap: 6px;
+            background: var(--red-dim); border: 1px solid rgba(229,9,20,.3);
+            color: var(--red); font-size: .68rem; font-weight: 700;
+            letter-spacing: 1.5px; text-transform: uppercase;
+            padding: 3px 12px; border-radius: 20px; margin-bottom: 12px;
+        }
+
+        .phase h2 { font-size: 1.25rem; font-weight: 800; margin-bottom: 10px; }
+
+        .phase .description { color: #aaa; font-size: .9rem; line-height: 1.65; margin-bottom: 18px; }
+
+        /* Improvements list */
+        .improvements { list-style: none; margin-bottom: 20px; }
+        .improvements li {
+            font-size: .85rem; color: #888; padding: 4px 0;
+            display: flex; align-items: flex-start; gap: 8px;
+        }
+        .improvements li::before {
+            content: '▸';
+            color: var(--red); flex-shrink: 0; margin-top: 1px;
+        }
+
+        /* Tech tags */
+        .tags { display: flex; flex-wrap: wrap; gap: 8px; }
+        .tag {
+            display: inline-block;
+            padding: 3px 12px;
+            border-radius: 20px;
+            font-size: .72rem; font-weight: 600;
+            background: #1a1a1a;
+            border: 1px solid #2a2a2a;
+            color: #777;
+            transition: color .2s, border-color .2s;
+        }
+        .phase:hover .tag { color: #bbb; border-color: #333; }
+
+        /* Animation delays */
+        .phase:nth-child(1) { animation-delay: .05s; }
+        .phase:nth-child(2) { animation-delay: .15s; }
+        .phase:nth-child(3) { animation-delay: .25s; }
+        .phase:nth-child(4) { animation-delay: .35s; }
+        .phase:nth-child(5) { animation-delay: .45s; }
+
+        @keyframes slideIn {
+            from { opacity: 0; transform: translateX(-20px); }
+            to   { opacity: 1; transform: translateX(0); }
+        }
+
+        /* Phase accent colors */
+        .phase[data-color="gold"]   .phase-badge { background: rgba(255,215,0,.1); border-color: rgba(255,215,0,.3); color: var(--gold); }
+        .phase[data-color="gold"]::before  { background: var(--gold); box-shadow: 0 0 0 2px var(--gold); }
+        .phase[data-color="gold"]:hover   { border-color: var(--gold); box-shadow: -4px 0 0 0 var(--gold), 0 8px 32px rgba(255,215,0,.08); }
+        .phase[data-color="gold"] .improvements li::before { color: var(--gold); }
+
+        .phase[data-color="green"]  .phase-badge { background: rgba(70,211,105,.1); border-color: rgba(70,211,105,.3); color: var(--green); }
+        .phase[data-color="green"]::before { background: var(--green); box-shadow: 0 0 0 2px var(--green); }
+        .phase[data-color="green"]:hover  { border-color: var(--green); box-shadow: -4px 0 0 0 var(--green), 0 8px 32px rgba(70,211,105,.08); }
+        .phase[data-color="green"] .improvements li::before { color: var(--green); }
+
+        .phase[data-color="blue"]   .phase-badge { background: rgba(100,149,237,.1); border-color: rgba(100,149,237,.3); color: var(--blue); }
+        .phase[data-color="blue"]::before  { background: var(--blue); box-shadow: 0 0 0 2px var(--blue); }
+        .phase[data-color="blue"]:hover   { border-color: var(--blue); box-shadow: -4px 0 0 0 var(--blue), 0 8px 32px rgba(100,149,237,.08); }
+        .phase[data-color="blue"] .improvements li::before { color: var(--blue); }
+
+        .phase[data-color="purple"] .phase-badge { background: rgba(155,89,182,.1); border-color: rgba(155,89,182,.3); color: var(--purple); }
+        .phase[data-color="purple"]::before { background: var(--purple); box-shadow: 0 0 0 2px var(--purple); }
+        .phase[data-color="purple"]:hover { border-color: var(--purple); box-shadow: -4px 0 0 0 var(--purple), 0 8px 32px rgba(155,89,182,.08); }
+        .phase[data-color="purple"] .improvements li::before { color: var(--purple); }
+
+        /* Phase icon */
+        .phase-icon {
+            width: 44px; height: 44px; border-radius: 12px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.2rem; margin-bottom: 14px;
+            background: var(--red-dim);
+            color: var(--red);
+        }
+        .phase[data-color="gold"]   .phase-icon { background: rgba(255,215,0,.1);  color: var(--gold); }
+        .phase[data-color="green"]  .phase-icon { background: rgba(70,211,105,.1);  color: var(--green); }
+        .phase[data-color="blue"]   .phase-icon { background: rgba(100,149,237,.1); color: var(--blue); }
+        .phase[data-color="purple"] .phase-icon { background: rgba(155,89,182,.1);  color: var(--purple); }
+
+        /* ══════════════════════════════════════════════════════
+           FUTURE IMPROVEMENTS
+        ══════════════════════════════════════════════════════ */
+        .future-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 18px;
+            margin-top: 8px;
+        }
+
+        .future-card {
+            background: linear-gradient(135deg, #111 0%, #0d0d0d 100%);
+            border: 1px solid var(--border);
+            border-radius: 14px;
+            padding: 24px 22px;
+            position: relative; overflow: hidden;
+            transition: transform .3s, border-color .3s;
+            animation: fadeUp .5s ease both;
+        }
+        .future-card:hover { transform: translateY(-4px); border-color: #333; }
+        .future-card::before {
+            content: '';
+            position: absolute; top: 0; left: 0; right: 0; height: 3px;
+            background: linear-gradient(90deg, var(--red), transparent);
+        }
+        .future-card:nth-child(2)::before { background: linear-gradient(90deg, var(--gold), transparent); }
+        .future-card:nth-child(3)::before { background: linear-gradient(90deg, var(--green), transparent); }
+        .future-card:nth-child(4)::before { background: linear-gradient(90deg, var(--blue), transparent); }
+        .future-card:nth-child(5)::before { background: linear-gradient(90deg, var(--purple), transparent); }
+
+        .future-card:nth-child(1) { animation-delay: .05s; }
+        .future-card:nth-child(2) { animation-delay: .12s; }
+        .future-card:nth-child(3) { animation-delay: .19s; }
+        .future-card:nth-child(4) { animation-delay: .26s; }
+        .future-card:nth-child(5) { animation-delay: .33s; }
+
+        @keyframes fadeUp {
+            from { opacity: 0; transform: translateY(16px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+
+        .future-card .fc-icon {
+            width: 40px; height: 40px; border-radius: 10px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: 1.1rem; margin-bottom: 14px;
+            background: var(--red-dim); color: var(--red);
+        }
+        .future-card:nth-child(2) .fc-icon { background: rgba(255,215,0,.1);  color: var(--gold); }
+        .future-card:nth-child(3) .fc-icon { background: rgba(70,211,105,.1);  color: var(--green); }
+        .future-card:nth-child(4) .fc-icon { background: rgba(100,149,237,.1); color: var(--blue); }
+        .future-card:nth-child(5) .fc-icon { background: rgba(155,89,182,.1);  color: var(--purple); }
+
+        .future-card h3 { font-size: .95rem; font-weight: 700; margin-bottom: 8px; }
+        .future-card p  { font-size: .82rem; color: #666; line-height: 1.6; }
+
+        .soon-badge {
+            display: inline-block; padding: 2px 9px; border-radius: 20px;
+            font-size: .65rem; font-weight: 700; letter-spacing: 1px;
+            background: #1a1a1a; border: 1px solid #2a2a2a; color: #444;
+            margin-top: 12px;
+        }
+
+        /* ── Progress bar strip ── */
+        .progress-strip {
+            display: flex; gap: 6px; margin: 40px 0 8px;
+        }
+        .ps-step {
+            flex: 1; height: 4px; border-radius: 4px;
+            background: var(--border);
+            position: relative; overflow: hidden;
+        }
+        .ps-step.done::after {
+            content: '';
+            position: absolute; inset: 0;
+            border-radius: 4px;
+            animation: fillBar .8s ease forwards;
+        }
+        .ps-step:nth-child(1).done::after { background: var(--red);    animation-delay: .1s; }
+        .ps-step:nth-child(2).done::after { background: var(--gold);   animation-delay: .3s; }
+        .ps-step:nth-child(3).done::after { background: var(--green);  animation-delay: .5s; }
+        .ps-step:nth-child(4).done::after { background: var(--blue);   animation-delay: .7s; }
+        .ps-step:nth-child(5).done::after { background: var(--purple); animation-delay: .9s; }
+        @keyframes fillBar { from { transform: scaleX(0); transform-origin: left; } to { transform: scaleX(1); } }
+
+        .ps-labels {
+            display: flex; gap: 6px; font-size: .65rem; color: #333;
+            margin-bottom: 40px; text-align: center;
+        }
+        .ps-labels span { flex: 1; }
+
+        /* ── Responsive ── */
+        @media (max-width: 900px)  { .future-grid { grid-template-columns: 1fr 1fr; } }
+        @media (max-width: 600px)  { .future-grid { grid-template-columns: 1fr; } .timeline { padding-left: 32px; } }
+    </style>
+</head>
+<body>
+
+<div class="corner-h"><span>Team ID: 969101</span><span>CHAPTER 6: IMPLEMENTATION — PROJECT EVOLUTION</span></div>
+
+<nav>
+    <a href="/" class="logo">MOVIE MATCH AI</a>
+    <ul class="nav-links">
+        <li><a href="/">Home</a></li>
+        <li><a href="/concepts">How it Works</a></li>
+        <li><a href="/analysis">Analysis</a></li>
+        <li><a href="/dashboard">Dashboard</a></li>
+        <li><a href="/evolution" class="active">Evolution</a></li>
+        <li><a href="/contribute">Contribute</a></li>
+    </ul>
+</nav>
+
+<div class="page">
+
+    <div class="page-header">
+        <h1>Project Evolution</h1>
+        <p>A visual development journey — from a Google Colab notebook to a full-stack AI recommendation system backed by 1.1M+ movie records.</p>
+    </div>
+
+    <!-- Progress strip -->
+    <div class="progress-strip">
+        <div class="ps-step done"></div>
+        <div class="ps-step done"></div>
+        <div class="ps-step done"></div>
+        <div class="ps-step done"></div>
+        <div class="ps-step done"></div>
+    </div>
+    <div class="ps-labels">
+        <span>Prototype</span>
+        <span>Flask App</span>
+        <span>Database</span>
+        <span>Optimization</span>
+        <span>Analytics</span>
+    </div>
+
+    <!-- ── TIMELINE ── -->
+    <div class="section-title">&#9679; Development Phases</div>
+
+    <div class="timeline">
+
+        <!-- Phase 1 -->
+        <div class="phase" data-color="red">
+            <div class="phase-icon"><i class="fas fa-flask"></i></div>
+            <div class="phase-badge"><i class="fas fa-circle" style="font-size:.5rem"></i> Phase 1</div>
+            <h2>Initial Prototype</h2>
+            <p class="description">
+                The project started as a Google Colab experiment. A small movie dataset was loaded, cleaned, and used to build a basic content-based recommendation engine using cosine similarity on TF-IDF feature vectors.
+            </p>
+            <ul class="improvements">
+                <li>Built a basic recommendation model inside Google Colab notebooks</li>
+                <li>Experimented with multiple TMDB movie datasets and feature combinations</li>
+                <li>Implemented cosine similarity on combined text features (genre, cast, overview)</li>
+                <li>Validated recommendation quality manually with test queries</li>
+            </ul>
+            <div class="tags">
+                <span class="tag">Python</span>
+                <span class="tag">Google Colab</span>
+                <span class="tag">Pandas</span>
+                <span class="tag">Scikit-learn</span>
+                <span class="tag">TF-IDF</span>
+                <span class="tag">Cosine Similarity</span>
+                <span class="tag">TMDB Dataset</span>
+            </div>
+        </div>
+
+        <!-- Phase 2 -->
+        <div class="phase" data-color="gold">
+            <div class="phase-icon"><i class="fas fa-globe"></i></div>
+            <div class="phase-badge"><i class="fas fa-circle" style="font-size:.5rem"></i> Phase 2</div>
+            <h2>Flask Web Application</h2>
+            <p class="description">
+                The notebook prototype was converted into a Flask web application, making recommendations accessible through a browser. A Jinja2 frontend was designed so users could search movies and instantly receive recommendations with poster images.
+            </p>
+            <ul class="improvements">
+                <li>Integrated Flask backend serving recommendation results via POST requests</li>
+                <li>Built a Jinja2-powered HTML/CSS frontend with a movie search interface</li>
+                <li>Enabled user movie searches with autocomplete using the title list</li>
+                <li>Displayed top-10 similar movies with TMDB poster images and ratings</li>
+            </ul>
+            <div class="tags">
+                <span class="tag">Flask</span>
+                <span class="tag">Jinja2</span>
+                <span class="tag">HTML/CSS</span>
+                <span class="tag">JavaScript</span>
+                <span class="tag">TMDB Poster API</span>
+                <span class="tag">Python</span>
+            </div>
+        </div>
+
+        <!-- Phase 3 -->
+        <div class="phase" data-color="green">
+            <div class="phase-icon"><i class="fas fa-database"></i></div>
+            <div class="phase-badge"><i class="fas fa-circle" style="font-size:.5rem"></i> Phase 3</div>
+            <h2>Database Integration</h2>
+            <p class="description">
+                SQLite databases were added to persist movie metadata and community contributions. The backend structure was reorganized for maintainability, and a community contribution feature allowed users to submit new movie links.
+            </p>
+            <ul class="improvements">
+                <li>Added SQLite database for persisting contributions and metadata</li>
+                <li>Built CRUD operations for the community contribution system</li>
+                <li>Organized Flask routes into logical grouped sections</li>
+                <li>Improved session management and data validation on form submissions</li>
+            </ul>
+            <div class="tags">
+                <span class="tag">SQLite</span>
+                <span class="tag">SQLite3 (Python)</span>
+                <span class="tag">Flask CRUD</span>
+                <span class="tag">Form Validation</span>
+                <span class="tag">Database Design</span>
+            </div>
+        </div>
+
+        <!-- Phase 4 -->
+        <div class="phase" data-color="blue">
+            <div class="phase-icon"><i class="fas fa-bolt"></i></div>
+            <div class="phase-badge"><i class="fas fa-circle" style="font-size:.5rem"></i> Phase 4</div>
+            <h2>Recommendation Optimization</h2>
+            <p class="description">
+                Runtime cosine similarity was replaced with precomputed vectorized data serialized to a <code style="background:#1a1a1a;padding:1px 6px;border-radius:4px;font-size:.82rem;color:#aaa">.pkl</code> file. This eliminated expensive on-demand computation and reduced recommendation response time to near-instant.
+            </p>
+            <ul class="improvements">
+                <li>Switched from runtime TF-IDF + cosine similarity to precomputed pickle vectors</li>
+                <li>Reduced recommendation latency from seconds to milliseconds</li>
+                <li>Serialized both movie metadata and vectorized features to .pkl at build time</li>
+                <li>Eliminated redundant computations on every user request</li>
+            </ul>
+            <div class="tags">
+                <span class="tag">Pickle (.pkl)</span>
+                <span class="tag">Precomputed Vectors</span>
+                <span class="tag">Scikit-learn</span>
+                <span class="tag">Performance Optimization</span>
+                <span class="tag">Memory Management</span>
+            </div>
+        </div>
+
+        <!-- Phase 5 -->
+        <div class="phase" data-color="purple">
+            <div class="phase-icon"><i class="fas fa-chart-line"></i></div>
+            <div class="phase-badge"><i class="fas fa-circle" style="font-size:.5rem"></i> Phase 5</div>
+            <h2>Dashboard &amp; Analytics</h2>
+            <p class="description">
+                A full analytics suite was added, split across two dedicated pages. The Dashboard reads the entire 1.1M-record raw CSV via memory-efficient chunked streaming to produce accurate dataset-wide statistics. The Analysis page presents EDA on the 10K processed recommendation dataset.
+            </p>
+            <ul class="improvements">
+                <li>Built an A-Z Dashboard with 10+ interactive Chart.js visualizations from raw CSV</li>
+                <li>Implemented chunked CSV streaming (100K rows/chunk) for memory-efficient stat computation</li>
+                <li>Added dedicated EDA Analysis page with 8 charts from the processed PKL dataset</li>
+                <li>Added contribution &amp; community section with SQLite-backed submission tracking</li>
+                <li>Added this Project Evolution page documenting the development journey</li>
+            </ul>
+            <div class="tags">
+                <span class="tag">Chart.js</span>
+                <span class="tag">Pandas Chunked CSV</span>
+                <span class="tag">EDA</span>
+                <span class="tag">Data Visualization</span>
+                <span class="tag">SQLite</span>
+                <span class="tag">Flask Templates</span>
+            </div>
+        </div>
+
+    </div><!-- /timeline -->
+
+    <!-- ── FUTURE IMPROVEMENTS ── -->
+    <div class="section-title">&#9679; Future Improvements</div>
+
+    <div class="future-grid">
+
+        <div class="future-card">
+            <div class="fc-icon"><i class="fas fa-play-circle"></i></div>
+            <h3>Trailer Integration</h3>
+            <p>Embed YouTube trailer previews directly on the recommendation cards so users can preview movies without leaving the site.</p>
+            <span class="soon-badge">UPCOMING</span>
+        </div>
+
+        <div class="future-card">
+            <div class="fc-icon"><i class="fas fa-sitemap"></i></div>
+            <h3>Hybrid Recommendation System</h3>
+            <p>Combine content-based filtering with collaborative filtering to improve recommendation diversity and cold-start handling.</p>
+            <span class="soon-badge">UPCOMING</span>
+        </div>
+
+        <div class="future-card">
+            <div class="fc-icon"><i class="fas fa-bullseye"></i></div>
+            <h3>Improved Accuracy</h3>
+            <p>Explore BERT-based sentence embeddings or fine-tuned transformer models to produce semantically richer feature vectors.</p>
+            <span class="soon-badge">UPCOMING</span>
+        </div>
+
+        <div class="future-card">
+            <div class="fc-icon"><i class="fas fa-user-circle"></i></div>
+            <h3>Personalized Recommendations</h3>
+            <p>Build user profiles using watch history and ratings to deliver tailored recommendations that evolve over time.</p>
+            <span class="soon-badge">UPCOMING</span>
+        </div>
+
+        <div class="future-card">
+            <div class="fc-icon"><i class="fas fa-paint-brush"></i></div>
+            <h3>UI/UX Enhancements</h3>
+            <p>Add dark/light mode toggle, skeleton loading states, infinite scroll, and mobile-first redesign for a premium feel.</p>
+            <span class="soon-badge">UPCOMING</span>
+        </div>
+
+    </div>
+
+</div><!-- /page -->
+
+<div class="corner-f">
+    <span>Gujarat Technological University</span>
+    <span><b>Project Evolution</b></span>
+    <span>Ahmedabad Institute of Technology</span>
+</div>
+
+</body>
+</html>

@@ -1,0 +1,285 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Movie Matcher AI</title>
+    <meta name="description" content="Movie Matcher AI — personalized movie recommendations using TF-IDF and Cosine Similarity on 10,000+ titles.">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <style>
+        /* ── Reset & Theme ── */
+        *, *::before, *::after { box-sizing: border-box; }
+        body {
+            background-color: #141414;
+            color: white;
+            font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
+            margin: 0;
+            padding-bottom: 50px;
+            scroll-behavior: smooth;
+        }
+
+        /* ── Navbar ── */
+        .navbar {
+            position: fixed;
+            top: 0; width: 100%; height: 70px;
+            background: rgba(8,8,8,0.97);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 5%;
+            z-index: 1000;
+            border-bottom: 1px solid #222;
+            backdrop-filter: blur(8px);
+            box-sizing: border-box;
+        }
+        .logo { color: #e50914; font-size: 1.5rem; font-weight: 900; text-decoration: none; letter-spacing: 1px; white-space: nowrap; }
+        .nav-links {
+            list-style: none;
+            display: flex;
+            gap: 28px;
+            margin: 0;
+            padding: 0;
+            white-space: nowrap;
+        }
+        .nav-links a { color: #888; text-decoration: none; font-size: 0.88rem; font-weight: 500; transition: color 0.2s; }
+        .nav-links a:hover { color: #fff; }
+
+        /* ── Hero ── */
+        .hero {
+            padding: 150px 20px 80px;
+            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.9)),
+                        url('https://assets.nflxext.com/ffe/siteui/vlv3/f841d4c7-10e1-40af-bca1-0746f906244f/af309b62-e935-4d7f-8565-d069680ee9e9/US-en-20220502-popsignuptwoweeks-perspective_alpha_website_medium.jpg');
+            background-size: cover;
+            background-position: center;
+            text-align: center;
+        }
+        h1 { font-size: 3.5rem; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); }
+        h2 { text-align: left; padding: 0 4%; font-size: 1.4rem; margin-top: 40px; margin-bottom: 15px; }
+
+        /* ── Form ── */
+        .search-form { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
+        .search-form input {
+            padding: 16px;
+            border-radius: 4px;
+            border: none;
+            font-size: 16px;
+            width: 400px;
+            max-width: 90vw;
+            background: rgba(255,255,255,0.9);
+            color: #111;
+        }
+        .search-form button {
+            padding: 16px 32px;
+            border-radius: 4px;
+            border: none;
+            font-size: 16px;
+            background-color: #e50914;
+            color: white;
+            cursor: pointer;
+            font-weight: bold;
+            white-space: nowrap;
+        }
+        .search-form button:hover { background-color: #b20710; }
+
+        /* ── Cards ── */
+        .row {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 15px;
+            padding: 0 4%;
+        }
+        .card {
+            background: #181818;
+            border-radius: 4px;
+            overflow: hidden;
+            transition: transform 0.3s;
+            cursor: pointer;
+        }
+        .card:hover { transform: scale(1.05); }
+        .card img { width: 100%; height: auto; aspect-ratio: 2/3; object-fit: cover; }
+        .card-info { padding: 10px; font-size: 0.9rem; text-align: left; }
+        .rating { color: #46d369; font-weight: bold; margin-top: 5px; font-size: 0.8rem; }
+
+        /* ── Misc ── */
+        .error-message { color: #e50914; margin-top: 20px; }
+        hr { border: 0; height: 1px; background: #333; margin: 40px 4%; }
+        .rec-header { color: #e50914; margin-bottom: 20px; font-weight: bold; padding: 0 4%; }
+
+        /* ── Footer ── */
+        footer {
+            background-color: #111;
+            color: #fff;
+            padding: 60px 5%;
+            margin-top: 100px;
+            border-top: 2px solid #e50914;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        .footer-container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1300px;
+            margin: 0 auto;
+        }
+        .footer-side { flex: 1; text-align: center; }
+        .academic-logo {
+            height: 100px; width: auto; margin-bottom: 10px;
+            filter: drop-shadow(0 0 8px rgba(255,255,255,0.1));
+        }
+        .logo-label { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 1px; }
+        .footer-center {
+            flex: 2; text-align: center;
+            border-left: 1px solid #333;
+            border-right: 1px solid #333;
+            padding: 0 30px;
+        }
+        .footer-title { color: #e50914; font-size: 2rem; margin: 0; letter-spacing: 2px; }
+        .tagline { font-size: 0.9rem; color: #bbb; margin-top: 5px; }
+        .educational-fill {
+            margin: 20px 0;
+            display: flex; justify-content: center; gap: 20px;
+            font-size: 0.8rem; color: #ffd700;
+        }
+        .student-info { font-size: 0.9rem; color: #fff; line-height: 1.6; }
+        .tech-icons {
+            margin-top: 20px; font-size: 1.5rem; color: #555;
+            display: flex; justify-content: center; gap: 25px;
+        }
+        .footer-bottom {
+            text-align: center; margin-top: 50px; padding-top: 20px;
+            border-top: 1px solid #222; font-size: 11px; color: #444;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <a href="/" class="logo">MOVIE MATCH AI</a>
+        <ul class="nav-links">
+            <li><a href="/">Home</a></li>
+            <li><a href="/concepts">How it Works</a></li>
+            <li><a href="/analysis">Analysis</a></li>
+            <li><a href="/dashboard">Dashboard</a></li>
+            <li><a href="/evolution">Evolution</a></li>
+            <li><a href="/contribute">Contribute</a></li>
+        </ul>
+    </nav>
+
+    <div class="hero">
+        <h1>Movie Matcher AI</h1>
+        <p style="font-size: 1.2rem; margin-bottom: 30px;">Personalized suggestions from 10,000+ titles.</p>
+        <form action="/recommend" method="POST" class="search-form">
+            <input list="movie_options" name="movie_name" placeholder="Search for a movie..." required>
+            <datalist id="movie_options">
+                {% for title in titles %}
+                <option value="{{ title }}">
+                {% endfor %}
+            </datalist>
+            <button type="submit">Get Recommendations</button>
+        </form>
+        {% if error %}
+        <div class="error-message">&#9888;&#65039; {{ error }}</div>
+        {% endif %}
+    </div>
+
+    {% if results %}
+    <h2 class="rec-header">Because you liked &ldquo;{{ original }}&rdquo;</h2>
+    <div class="row">
+        {% for movie in results %}
+        <div class="card">
+            <img src="{{ movie.poster }}" alt="{{ movie.title }}" loading="lazy">
+            <div class="card-info">
+                <b>{{ movie.title }}</b>
+                <div class="rating">{{ (movie.rating * 10)|int }}% Match</div>
+            </div>
+        </div>
+        {% endfor %}
+    </div>
+    <hr>
+    {% endif %}
+
+    <h2>Action Blockbusters</h2>
+    <div class="row">
+        {% for movie in action %}
+        <div class="card">
+            <img src="{{ movie.poster }}" alt="{{ movie.title }}" loading="lazy">
+            <div class="card-info"><b>{{ movie.title }}</b><div class="rating">&#9733; {{ movie.rating }}</div></div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <h2>Top Comedy Hits</h2>
+    <div class="row">
+        {% for movie in comedy %}
+        <div class="card">
+            <img src="{{ movie.poster }}" alt="{{ movie.title }}" loading="lazy">
+            <div class="card-info"><b>{{ movie.title }}</b><div class="rating">&#9733; {{ movie.rating }}</div></div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <h2>Must-Watch Thrillers</h2>
+    <div class="row">
+        {% for movie in thrillers %}
+        <div class="card">
+            <img src="{{ movie.poster }}" alt="{{ movie.title }}" loading="lazy">
+            <div class="card-info"><b>{{ movie.title }}</b><div class="rating">&#9733; {{ movie.rating }}</div></div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <h2>Movies in Hindi</h2>
+    <div class="row">
+        {% for movie in hindi %}
+        <div class="card">
+            <img src="{{ movie.poster }}" alt="{{ movie.title }}" loading="lazy">
+            <div class="card-info"><b>{{ movie.title }}</b><div class="rating">&#9733; {{ movie.rating }}</div></div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <h2>Global Cinema (English)</h2>
+    <div class="row">
+        {% for movie in english %}
+        <div class="card">
+            <img src="{{ movie.poster }}" alt="{{ movie.title }}" loading="lazy">
+            <div class="card-info"><b>{{ movie.title }}</b><div class="rating">&#9733; {{ movie.rating }}</div></div>
+        </div>
+        {% endfor %}
+    </div>
+
+    <footer>
+        <div class="footer-container">
+            <div class="footer-side">
+                <img src="{{ url_for('static', filename='images/gtu_logo.png') }}" alt="GTU Logo" class="academic-logo">
+                <p class="logo-label">Gujarat Technological University</p>
+            </div>
+            <div class="footer-center">
+                <h3 class="footer-title">MOVIE MATCH AI</h3>
+                <p class="tagline">Intelligent Content-Based Recommendation System</p>
+                <div class="educational-fill">
+                    <span><i class="fas fa-microchip"></i> TF-IDF Vectorization</span>
+                    <span><i class="fas fa-calculator"></i> Cosine Similarity</span>
+                </div>
+                <div class="student-info">
+                    <strong>Sneh Joshi</strong> | Team ID: 969101<br>
+                    Department of Information Technology
+                </div>
+                <div class="tech-icons">
+                    <i class="fab fa-python" title="Python"></i>
+                    <i class="fas fa-fire" title="Flask"></i>
+                    <i class="fas fa-brain" title="Scikit-Learn"></i>
+                    <i class="fas fa-database" title="SQLite"></i>
+                </div>
+            </div>
+            <div class="footer-side">
+                <img src="{{ url_for('static', filename='images/Ait_logo.png') }}" alt="AIT Logo" class="academic-logo">
+                <p class="logo-label">Ahmedabad Institute of Technology</p>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            &copy; 2026 Final Year Engineering Project | Academic Year 2025-26
+        </div>
+    </footer>
+</body>
+</html>
