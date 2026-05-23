@@ -3,283 +3,630 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Movie Matcher AI</title>
-    <meta name="description" content="Movie Matcher AI — personalized movie recommendations using TF-IDF and Cosine Similarity on 10,000+ titles.">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700;900&display=swap" rel="stylesheet">
+    <title>Movie Matcher AI — Find Your Next Favourite Film</title>
+    <meta name="description" content="Movie Matcher AI — AI-powered movie recommendations from 10,000+ curated titles.">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Outfit:wght@700;800;900&display=swap" rel="stylesheet">
     <style>
-        /* ── Reset & Theme ── */
-        *, *::before, *::after { box-sizing: border-box; }
+        /* ── Reset ── */
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+        :root {
+            --red:      #e50914;
+            --red-dk:   #b20710;
+            --red-dim:  rgba(229,9,20,.12);
+            --gold:     #ffd700;
+            --green:    #46d369;
+            --bg:       #080808;
+            --card:     #111;
+            --border:   #1c1c1c;
+            --dim:      #555;
+        }
+        html { scroll-behavior: smooth; }
         body {
-            background-color: #141414;
-            color: white;
-            font-family: 'Inter', 'Helvetica Neue', Helvetica, Arial, sans-serif;
-            margin: 0;
-            padding-bottom: 50px;
-            scroll-behavior: smooth;
+            background: var(--bg);
+            color: #fff;
+            font-family: 'Inter', sans-serif;
+            overflow-x: hidden;
         }
 
-        /* ── Navbar ── */
+        /* ════════════════════════════════════════
+           NAVBAR
+        ════════════════════════════════════════ */
         .navbar {
-            position: fixed;
-            top: 0; width: 100%; height: 70px;
-            background: rgba(8,8,8,0.97);
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
+            position: fixed; top: 0; width: 100%; z-index: 1000;
+            height: 66px;
+            display: flex; align-items: center; justify-content: space-between;
             padding: 0 5%;
-            z-index: 1000;
-            border-bottom: 1px solid #222;
-            backdrop-filter: blur(8px);
-            box-sizing: border-box;
+            background: rgba(8,8,8,.92);
+            border-bottom: 1px solid rgba(255,255,255,.04);
+            backdrop-filter: blur(18px) saturate(180%);
+            transition: background .3s, box-shadow .3s;
         }
-        .logo { color: #e50914; font-size: 1.5rem; font-weight: 900; text-decoration: none; letter-spacing: 1px; white-space: nowrap; }
-        .nav-links {
-            list-style: none;
-            display: flex;
-            gap: 28px;
-            margin: 0;
-            padding: 0;
+        .navbar.scrolled {
+            background: rgba(8,8,8,.99);
+            box-shadow: 0 4px 40px rgba(0,0,0,.7);
+        }
+        .logo {
+            display: flex; align-items: center; gap: 10px;
+            text-decoration: none;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.35rem; font-weight: 900;
+            color: var(--red); letter-spacing: .5px;
             white-space: nowrap;
         }
-        .nav-links a { color: #888; text-decoration: none; font-size: 0.88rem; font-weight: 500; transition: color 0.2s; }
-        .nav-links a:hover { color: #fff; }
+        .logo-dot {
+            width: 28px; height: 28px; border-radius: 7px;
+            background: var(--red);
+            display: flex; align-items: center; justify-content: center;
+            font-size: .8rem; color: #fff;
+            box-shadow: 0 0 14px rgba(229,9,20,.5);
+        }
+        .nav-links { list-style: none; display: flex; gap: 4px; white-space: nowrap; }
+        .nav-links a {
+            color: #888; text-decoration: none;
+            font-size: .82rem; font-weight: 500;
+            padding: 6px 13px; border-radius: 8px;
+            transition: color .2s, background .2s;
+        }
+        .nav-links a:hover { color: #fff; background: rgba(255,255,255,.06); }
+        .nav-links a.active { color: #fff; }
 
-        /* ── Hero ── */
+        /* ════════════════════════════════════════
+           HERO
+        ════════════════════════════════════════ */
         .hero {
-            padding: 150px 20px 80px;
-            background: linear-gradient(rgba(0,0,0,0.6), rgba(0,0,0,0.9)),
-                        url('https://assets.nflxext.com/ffe/siteui/vlv3/f841d4c7-10e1-40af-bca1-0746f906244f/af309b62-e935-4d7f-8565-d069680ee9e9/US-en-20220502-popsignuptwoweeks-perspective_alpha_website_medium.jpg');
-            background-size: cover;
-            background-position: center;
+            position: relative;
+            min-height: 100vh;
+            display: flex; align-items: center; justify-content: center;
             text-align: center;
+            padding: 120px 5% 80px;
+            overflow: hidden;
         }
-        h1 { font-size: 3.5rem; margin-bottom: 10px; text-shadow: 2px 2px 4px rgba(0,0,0,0.8); }
-        h2 { text-align: left; padding: 0 4%; font-size: 1.4rem; margin-top: 40px; margin-bottom: 15px; }
 
-        /* ── Form ── */
-        .search-form { display: flex; justify-content: center; gap: 10px; flex-wrap: wrap; }
-        .search-form input {
-            padding: 16px;
-            border-radius: 4px;
-            border: none;
-            font-size: 16px;
-            width: 400px;
-            max-width: 90vw;
-            background: rgba(255,255,255,0.9);
-            color: #111;
+        /* Background layers */
+        .hero::before {
+            content: '';
+            position: absolute; inset: 0;
+            background:
+                radial-gradient(ellipse 90% 70% at 50% -10%, rgba(229,9,20,.22) 0%, transparent 60%),
+                radial-gradient(ellipse 50% 40% at 85% 90%, rgba(229,9,20,.07) 0%, transparent 55%),
+                linear-gradient(180deg, #080808 0%, #050505 100%);
         }
-        .search-form button {
-            padding: 16px 32px;
-            border-radius: 4px;
-            border: none;
-            font-size: 16px;
-            background-color: #e50914;
-            color: white;
-            cursor: pointer;
-            font-weight: bold;
-            white-space: nowrap;
+        /* Grid pattern */
+        .hero::after {
+            content: '';
+            position: absolute; inset: 0;
+            background-image:
+                linear-gradient(rgba(255,255,255,.018) 1px, transparent 1px),
+                linear-gradient(90deg, rgba(255,255,255,.018) 1px, transparent 1px);
+            background-size: 55px 55px;
+            mask-image: radial-gradient(ellipse 80% 65% at 50% 45%, black 20%, transparent 75%);
+            pointer-events: none;
         }
-        .search-form button:hover { background-color: #b20710; }
 
-        /* ── Cards ── */
-        .row {
+        /* Floating orbs */
+        .orb {
+            position: absolute; border-radius: 50%;
+            filter: blur(90px); pointer-events: none;
+            animation: float 9s ease-in-out infinite;
+        }
+        .orb-1 { width: 500px; height: 500px; background: rgba(229,9,20,.1);  top: -10%; left: -8%; }
+        .orb-2 { width: 350px; height: 350px; background: rgba(229,9,20,.07); bottom: 10%; right: -6%; animation-delay: 3.5s; }
+        @keyframes float {
+            0%,100% { transform: translateY(0) scale(1); }
+            50%      { transform: translateY(-28px) scale(1.04); }
+        }
+
+        .hero-inner {
+            position: relative; z-index: 1;
+            max-width: 780px; margin: 0 auto;
+        }
+
+        /* Pill badge */
+        .hero-pill {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(229,9,20,.1);
+            border: 1px solid rgba(229,9,20,.28);
+            color: #ff6060; font-size: .7rem; font-weight: 700;
+            letter-spacing: 2px; text-transform: uppercase;
+            padding: 5px 16px; border-radius: 30px; margin-bottom: 26px;
+            animation: rise .7s ease both;
+        }
+        .hero-pill .blink {
+            width: 6px; height: 6px; border-radius: 50%;
+            background: var(--red);
+            animation: blink 1.8s ease-in-out infinite;
+        }
+        @keyframes blink {
+            0%,100% { opacity:1; transform:scale(1); }
+            50%      { opacity:.3; transform:scale(.7); }
+        }
+
+        /* Headline */
+        .hero-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: clamp(3rem, 6.5vw, 5.8rem);
+            font-weight: 900; line-height: 1.04;
+            letter-spacing: -.5px;
+            margin-bottom: 22px;
+            animation: rise .7s ease .08s both;
+        }
+        .hero-title .accent {
+            background: linear-gradient(125deg, #e50914 0%, #ff6b35 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .hero-sub {
+            font-size: clamp(.95rem, 1.8vw, 1.12rem);
+            color: #666; line-height: 1.7; font-weight: 400;
+            margin-bottom: 44px;
+            animation: rise .7s ease .16s both;
+        }
+
+        /* Search */
+        .search-wrap {
+            max-width: 580px; margin: 0 auto 14px;
+            animation: rise .7s ease .24s both;
+        }
+        .search-wrap form {
+            display: flex;
+            background: rgba(255,255,255,.055);
+            border: 1px solid rgba(255,255,255,.09);
+            border-radius: 14px; overflow: hidden;
+            backdrop-filter: blur(12px);
+            transition: border-color .3s, box-shadow .3s;
+        }
+        .search-wrap form:focus-within {
+            border-color: rgba(229,9,20,.45);
+            box-shadow: 0 0 0 3px rgba(229,9,20,.08), 0 12px 40px rgba(0,0,0,.5);
+        }
+        .search-icon-wrap {
+            display: flex; align-items: center;
+            padding: 0 0 0 20px; color: #444; font-size: .9rem;
+            pointer-events: none;
+        }
+        .search-wrap input {
+            flex: 1; padding: 18px 14px;
+            background: transparent; border: none;
+            color: #fff; font-family: 'Inter', sans-serif;
+            font-size: .95rem; outline: none;
+        }
+        .search-wrap input::placeholder { color: #444; }
+        .search-wrap button {
+            margin: 7px; padding: 12px 26px;
+            background: var(--red); border: none;
+            border-radius: 9px; color: #fff;
+            font-family: 'Inter', sans-serif;
+            font-size: .88rem; font-weight: 700;
+            cursor: pointer; white-space: nowrap;
+            display: flex; align-items: center; gap: 7px;
+            transition: background .2s, transform .15s;
+        }
+        .search-wrap button:hover { background: var(--red-dk); transform: scale(1.02); }
+
+        .search-hint {
+            font-size: .72rem; color: #333;
+            animation: rise .7s ease .32s both;
+        }
+
+        /* Error */
+        .error-banner {
+            display: inline-flex; align-items: center; gap: 8px;
+            background: rgba(229,9,20,.1);
+            border: 1px solid rgba(229,9,20,.3);
+            color: #ff6060; font-size: .85rem;
+            padding: 10px 18px; border-radius: 10px; margin-top: 16px;
+        }
+
+        /* Scroll arrow */
+        .scroll-cue {
+            position: absolute; bottom: 36px; left: 50%; transform: translateX(-50%);
+            display: flex; flex-direction: column; align-items: center; gap: 6px;
+            color: #252525; font-size: .62rem; letter-spacing: 2px; text-transform: uppercase;
+            z-index: 1;
+            animation: rise 1s ease 1s both;
+        }
+        .scroll-cue i { font-size: .9rem; animation: bounce 1.8s ease-in-out infinite; }
+        @keyframes bounce {
+            0%,100% { transform: translateY(0); }
+            50%      { transform: translateY(6px); }
+        }
+
+        @keyframes rise {
+            from { opacity:0; transform:translateY(22px); }
+            to   { opacity:1; transform:translateY(0); }
+        }
+
+        /* ════════════════════════════════════════
+           RESULTS BANNER
+        ════════════════════════════════════════ */
+        .results-section {
+            max-width: 1400px; margin: 0 auto;
+            padding: 52px 4% 8px;
+        }
+        .results-heading {
+            display: flex; align-items: center; gap: 14px; margin-bottom: 26px;
+        }
+        .results-heading h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.4rem; font-weight: 800;
+        }
+        .results-heading h2 em { color: var(--red); font-style: normal; }
+        .results-pill {
+            background: var(--red-dim);
+            border: 1px solid rgba(229,9,20,.25);
+            color: var(--red); font-size: .68rem; font-weight: 700;
+            letter-spacing: 1px; padding: 3px 11px; border-radius: 20px;
+        }
+
+        /* ════════════════════════════════════════
+           CAROUSELS
+        ════════════════════════════════════════ */
+        .carousel-wrap {
+            max-width: 1400px; margin: 0 auto;
+            padding: 0 4% 6px;
+        }
+        .carousel-header {
+            display: flex; align-items: center; gap: 12px;
+            margin: 44px 0 18px;
+        }
+        .carousel-header h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.15rem; font-weight: 800;
+            display: flex; align-items: center; gap: 10px;
+        }
+        .sec-chip {
+            width: 28px; height: 28px; border-radius: 7px;
+            display: flex; align-items: center; justify-content: center;
+            font-size: .78rem;
+        }
+        .section-divider {
+            flex: 1; height: 1px; background: var(--border);
+        }
+
+        /* Movie grid */
+        .movie-grid {
             display: grid;
             grid-template-columns: repeat(5, 1fr);
-            gap: 15px;
-            padding: 0 4%;
+            gap: 14px;
         }
-        .card {
-            background: #181818;
-            border-radius: 4px;
-            overflow: hidden;
-            transition: transform 0.3s;
+
+        /* Card */
+        .movie-card {
+            background: var(--card);
+            border-radius: 11px; overflow: hidden;
+            border: 1px solid var(--border);
             cursor: pointer;
+            transition:
+                transform .32s cubic-bezier(.34,1.56,.64,1),
+                border-color .25s,
+                box-shadow .25s;
+            position: relative;
         }
-        .card:hover { transform: scale(1.05); }
-        .card img { width: 100%; height: auto; aspect-ratio: 2/3; object-fit: cover; }
-        .card-info { padding: 10px; font-size: 0.9rem; text-align: left; }
-        .rating { color: #46d369; font-weight: bold; margin-top: 5px; font-size: 0.8rem; }
+        .movie-card:hover {
+            transform: translateY(-7px) scale(1.015);
+            border-color: rgba(229,9,20,.35);
+            box-shadow: 0 18px 44px rgba(0,0,0,.55), 0 0 0 1px rgba(229,9,20,.15);
+        }
 
-        /* ── Misc ── */
-        .error-message { color: #e50914; margin-top: 20px; }
-        hr { border: 0; height: 1px; background: #333; margin: 40px 4%; }
-        .rec-header { color: #e50914; margin-bottom: 20px; font-weight: bold; padding: 0 4%; }
+        /* Poster */
+        .poster-box {
+            position: relative;
+            aspect-ratio: 2/3; overflow: hidden;
+        }
+        .poster-box img {
+            width: 100%; height: 100%;
+            object-fit: cover; display: block;
+            transition: transform .45s ease;
+        }
+        .movie-card:hover .poster-box img { transform: scale(1.06); }
 
-        /* ── Footer ── */
+        /* Rating on poster */
+        .rating-chip {
+            position: absolute; top: 9px; right: 9px;
+            background: rgba(0,0,0,.75);
+            border: 1px solid rgba(255,255,255,.1);
+            backdrop-filter: blur(8px);
+            color: var(--gold); font-size: .68rem; font-weight: 700;
+            padding: 3px 8px; border-radius: 6px;
+            display: flex; align-items: center; gap: 4px;
+        }
+        /* Shine effect on hover */
+        .poster-box::before {
+            content: '';
+            position: absolute; inset: 0;
+            background: linear-gradient(
+                120deg,
+                transparent 30%,
+                rgba(255,255,255,.08) 50%,
+                transparent 70%
+            );
+            transform: translateX(-100%);
+            transition: transform 0s;
+            z-index: 1;
+        }
+        .movie-card:hover .poster-box::before {
+            transform: translateX(100%);
+            transition: transform .55s ease;
+        }
+
+        /* Info */
+        .card-info {
+            padding: 12px 13px 14px;
+        }
+        .card-title {
+            font-size: .82rem; font-weight: 600;
+            color: #ddd; margin-bottom: 5px;
+            white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+        }
+        .card-meta {
+            display: flex; align-items: center; gap: 7px;
+        }
+        .star-row {
+            color: var(--gold); font-size: .65rem;
+            display: flex; align-items: center; gap: 3px;
+        }
+        .star-row span { color: #888; font-size: .72rem; font-weight: 500; }
+
+        /* Match pill (for results) */
+        .match-pill {
+            background: rgba(70,211,105,.12);
+            border: 1px solid rgba(70,211,105,.25);
+            color: var(--green);
+            font-size: .65rem; font-weight: 700;
+            padding: 2px 8px; border-radius: 20px;
+        }
+
+        /* ════════════════════════════════════════
+           FOOTER
+        ════════════════════════════════════════ */
         footer {
-            background-color: #111;
-            color: #fff;
-            padding: 60px 5%;
-            margin-top: 100px;
-            border-top: 2px solid #e50914;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: #0a0a0a;
+            border-top: 1px solid var(--border);
+            padding: 56px 5% 28px;
+            margin-top: 80px;
         }
-        .footer-container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            max-width: 1300px;
-            margin: 0 auto;
+        .footer-inner {
+            max-width: 1400px; margin: 0 auto;
+            display: grid; grid-template-columns: 1fr 1.6fr 1fr;
+            gap: 40px; align-items: center;
+            padding-bottom: 36px;
+            border-bottom: 1px solid var(--border);
         }
-        .footer-side { flex: 1; text-align: center; }
-        .academic-logo {
-            height: 100px; width: auto; margin-bottom: 10px;
-            filter: drop-shadow(0 0 8px rgba(255,255,255,0.1));
+        .footer-inst { text-align: center; }
+        .footer-inst img { height: 76px; width: auto; opacity: .75; margin-bottom: 10px; display: block; margin-left: auto; margin-right: auto; }
+        .footer-inst p { font-size: .68rem; color: #333; text-transform: uppercase; letter-spacing: 1.2px; }
+
+        .footer-mid { text-align: center; }
+        .footer-brand {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.7rem; font-weight: 900;
+            color: var(--red); letter-spacing: 1px; margin-bottom: 5px;
         }
-        .logo-label { font-size: 11px; color: #888; text-transform: uppercase; letter-spacing: 1px; }
-        .footer-center {
-            flex: 2; text-align: center;
-            border-left: 1px solid #333;
-            border-right: 1px solid #333;
-            padding: 0 30px;
+        .footer-sub { font-size: .78rem; color: #333; margin-bottom: 18px; }
+        .footer-student { font-size: .84rem; color: #666; line-height: 1.75; }
+        .footer-student strong { color: #aaa; }
+        .tech-pills {
+            display: flex; flex-wrap: wrap; justify-content: center;
+            gap: 6px; margin: 14px 0;
         }
-        .footer-title { color: #e50914; font-size: 2rem; margin: 0; letter-spacing: 2px; }
-        .tagline { font-size: 0.9rem; color: #bbb; margin-top: 5px; }
-        .educational-fill {
-            margin: 20px 0;
-            display: flex; justify-content: center; gap: 20px;
-            font-size: 0.8rem; color: #ffd700;
-        }
-        .student-info { font-size: 0.9rem; color: #fff; line-height: 1.6; }
-        .tech-icons {
-            margin-top: 20px; font-size: 1.5rem; color: #555;
-            display: flex; justify-content: center; gap: 25px;
+        .tech-pill {
+            font-size: .66rem; font-weight: 600;
+            padding: 3px 10px; border-radius: 20px;
+            background: #161616; border: 1px solid #222; color: #444;
         }
         .footer-bottom {
-            text-align: center; margin-top: 50px; padding-top: 20px;
-            border-top: 1px solid #222; font-size: 11px; color: #444;
+            max-width: 1400px; margin: 24px auto 0;
+            text-align: center; font-size: .68rem; color: #222;
         }
+
+        /* ════════════════════════════════════════
+           RESPONSIVE
+        ════════════════════════════════════════ */
+        @media (max-width: 1100px) { .movie-grid { grid-template-columns: repeat(4,1fr); } }
+        @media (max-width: 860px)  { .movie-grid { grid-template-columns: repeat(3,1fr); } .footer-inner { grid-template-columns: 1fr; gap: 24px; } }
+        @media (max-width: 600px)  { .movie-grid { grid-template-columns: repeat(2,1fr); } .nav-links { display: none; } }
     </style>
 </head>
 <body>
-    <nav class="navbar">
-        <a href="/" class="logo">MOVIE MATCH AI</a>
-        <ul class="nav-links">
-            <li><a href="/">Home</a></li>
-            <li><a href="/concepts">How it Works</a></li>
-            <li><a href="/analysis">Analysis</a></li>
-            <li><a href="/dashboard">Dashboard</a></li>
-            <li><a href="/evolution">Evolution</a></li>
-            <li><a href="/contribute">Contribute</a></li>
-        </ul>
-    </nav>
 
-    <div class="hero">
-        <h1>Movie Matcher AI</h1>
-        <p style="font-size: 1.2rem; margin-bottom: 30px;">Personalized suggestions from 10,000+ titles.</p>
-        <form action="/recommend" method="POST" class="search-form">
-            <input list="movie_options" name="movie_name" placeholder="Search for a movie..." required>
-            <datalist id="movie_options">
-                {% for title in titles %}
-                <option value="{{ title }}">
-                {% endfor %}
-            </datalist>
-            <button type="submit">Get Recommendations</button>
-        </form>
+<!-- ─── NAVBAR ─────────────────────────────────────────── -->
+<nav class="navbar" id="navbar">
+    <a href="/" class="logo">
+        <div class="logo-dot"><i class="fas fa-film"></i></div>
+        MOVIE MATCH AI
+    </a>
+    <ul class="nav-links">
+        <li><a href="/" class="active">Home</a></li>
+        <li><a href="/concepts">How it Works</a></li>
+        <li><a href="/analysis">Analysis</a></li>
+        <li><a href="/dashboard">Dashboard</a></li>
+        <li><a href="/evolution">Evolution</a></li>
+        <li><a href="/contribute">Contribute</a></li>
+    </ul>
+</nav>
+
+<!-- ─── HERO ───────────────────────────────────────────── -->
+<section class="hero">
+    <div class="orb orb-1"></div>
+    <div class="orb orb-2"></div>
+
+    <div class="hero-inner">
+        <div class="hero-pill">
+            <span class="blink"></span>
+            AI-Powered Recommendations
+        </div>
+
+        <h1 class="hero-title">
+            Find Your Next<br>
+            <span class="accent">Favourite Movie</span>
+        </h1>
+
+        <p class="hero-sub">
+            Pick any movie — our engine compares it against 10,000+ curated titles<br>
+            and returns your top 10 matches in milliseconds.
+        </p>
+
+        <div class="search-wrap">
+            <form action="/recommend" method="POST" id="search-form">
+                <span class="search-icon-wrap"><i class="fas fa-search"></i></span>
+                <input
+                    list="movie_options"
+                    name="movie_name"
+                    id="movie-input"
+                    placeholder="e.g. Interstellar, The Dark Knight, Inception…"
+                    required autocomplete="off">
+                <datalist id="movie_options">
+                    {% for title in titles %}<option value="{{ title }}">{% endfor %}
+                </datalist>
+                <button type="submit" id="submit-btn">
+                    <i class="fas fa-wand-magic-sparkles"></i> Recommend
+                </button>
+            </form>
+        </div>
+
+        <p class="search-hint"><i class="fas fa-circle-info" style="color:#222; margin-right:5px;"></i>Start typing to see titles from our dataset</p>
+
         {% if error %}
-        <div class="error-message">&#9888;&#65039; {{ error }}</div>
+        <div class="error-banner"><i class="fas fa-circle-exclamation"></i> {{ error }}</div>
         {% endif %}
     </div>
 
-    {% if results %}
-    <h2 class="rec-header">Because you liked &ldquo;{{ original }}&rdquo;</h2>
-    <div class="row">
+    <div class="scroll-cue">
+        <i class="fas fa-chevron-down"></i>
+        Scroll
+    </div>
+</section>
+
+<!-- ─── RESULTS ────────────────────────────────────────── -->
+{% if results %}
+<section class="results-section">
+    <div class="results-heading">
+        <h2>Because you liked &ldquo;<em>{{ original }}</em>&rdquo;</h2>
+        <span class="results-pill">{{ results|length }} Matches</span>
+    </div>
+    <div class="movie-grid">
         {% for movie in results %}
-        <div class="card">
-            <img src="{{ movie.poster }}" alt="{{ movie.title }}" loading="lazy">
+        <div class="movie-card" style="animation: rise .4s ease {{ loop.index0 * 0.05 }}s both;">
+            <div class="poster-box">
+                <img src="{{ movie.poster }}" alt="{{ movie.title }}" loading="lazy">
+                <div class="rating-chip"><i class="fas fa-star" style="font-size:.58rem;"></i> {{ movie.rating }}</div>
+            </div>
             <div class="card-info">
-                <b>{{ movie.title }}</b>
-                <div class="rating">{{ (movie.rating * 10)|int }}% Match</div>
-            </div>
-        </div>
-        {% endfor %}
-    </div>
-    <hr>
-    {% endif %}
-
-    <h2>Action Blockbusters</h2>
-    <div class="row">
-        {% for movie in action %}
-        <div class="card">
-            <img src="{{ movie.poster }}" alt="{{ movie.title }}" loading="lazy">
-            <div class="card-info"><b>{{ movie.title }}</b><div class="rating">&#9733; {{ movie.rating }}</div></div>
-        </div>
-        {% endfor %}
-    </div>
-
-    <h2>Top Comedy Hits</h2>
-    <div class="row">
-        {% for movie in comedy %}
-        <div class="card">
-            <img src="{{ movie.poster }}" alt="{{ movie.title }}" loading="lazy">
-            <div class="card-info"><b>{{ movie.title }}</b><div class="rating">&#9733; {{ movie.rating }}</div></div>
-        </div>
-        {% endfor %}
-    </div>
-
-    <h2>Must-Watch Thrillers</h2>
-    <div class="row">
-        {% for movie in thrillers %}
-        <div class="card">
-            <img src="{{ movie.poster }}" alt="{{ movie.title }}" loading="lazy">
-            <div class="card-info"><b>{{ movie.title }}</b><div class="rating">&#9733; {{ movie.rating }}</div></div>
-        </div>
-        {% endfor %}
-    </div>
-
-    <h2>Movies in Hindi</h2>
-    <div class="row">
-        {% for movie in hindi %}
-        <div class="card">
-            <img src="{{ movie.poster }}" alt="{{ movie.title }}" loading="lazy">
-            <div class="card-info"><b>{{ movie.title }}</b><div class="rating">&#9733; {{ movie.rating }}</div></div>
-        </div>
-        {% endfor %}
-    </div>
-
-    <h2>Global Cinema (English)</h2>
-    <div class="row">
-        {% for movie in english %}
-        <div class="card">
-            <img src="{{ movie.poster }}" alt="{{ movie.title }}" loading="lazy">
-            <div class="card-info"><b>{{ movie.title }}</b><div class="rating">&#9733; {{ movie.rating }}</div></div>
-        </div>
-        {% endfor %}
-    </div>
-
-    <footer>
-        <div class="footer-container">
-            <div class="footer-side">
-                <img src="{{ url_for('static', filename='images/gtu_logo.png') }}" alt="GTU Logo" class="academic-logo">
-                <p class="logo-label">Gujarat Technological University</p>
-            </div>
-            <div class="footer-center">
-                <h3 class="footer-title">MOVIE MATCH AI</h3>
-                <p class="tagline">Intelligent Content-Based Recommendation System</p>
-                <div class="educational-fill">
-                    <span><i class="fas fa-microchip"></i> TF-IDF Vectorization</span>
-                    <span><i class="fas fa-calculator"></i> Cosine Similarity</span>
-                </div>
-                <div class="student-info">
-                    <strong>Sneh Joshi</strong> | Team ID: 969101<br>
-                    Department of Information Technology
-                </div>
-                <div class="tech-icons">
-                    <i class="fab fa-python" title="Python"></i>
-                    <i class="fas fa-fire" title="Flask"></i>
-                    <i class="fas fa-brain" title="Scikit-Learn"></i>
-                    <i class="fas fa-database" title="SQLite"></i>
+                <div class="card-title">{{ movie.title }}</div>
+                <div class="card-meta">
+                    <span class="match-pill">{{ (movie.rating * 10)|int }}% Match</span>
                 </div>
             </div>
-            <div class="footer-side">
-                <img src="{{ url_for('static', filename='images/Ait_logo.png') }}" alt="AIT Logo" class="academic-logo">
-                <p class="logo-label">Ahmedabad Institute of Technology</p>
+        </div>
+        {% endfor %}
+    </div>
+</section>
+{% endif %}
+
+<!-- ─── MACRO: Carousel Section ───────────────────────── -->
+{% macro carousel(label, movies, icon, color) %}
+<div class="carousel-wrap">
+    <div class="carousel-header">
+        <h2>
+            <div class="sec-chip" style="background:{{ color }}18; color:{{ color }};">
+                <i class="{{ icon }}"></i>
+            </div>
+            {{ label }}
+        </h2>
+        <div class="section-divider"></div>
+    </div>
+    <div class="movie-grid">
+        {% for movie in movies %}
+        <div class="movie-card">
+            <div class="poster-box">
+                <img src="{{ movie.poster }}" alt="{{ movie.title }}" loading="lazy">
+                <div class="rating-chip"><i class="fas fa-star" style="font-size:.58rem;"></i> {{ movie.rating }}</div>
+            </div>
+            <div class="card-info">
+                <div class="card-title">{{ movie.title }}</div>
+                <div class="card-meta">
+                    <span class="star-row"><i class="fas fa-star" style="font-size:.6rem;"></i> <span>{{ movie.rating }}</span></span>
+                </div>
             </div>
         </div>
-        <div class="footer-bottom">
-            &copy; 2026 Final Year Engineering Project | Academic Year 2025-26
+        {% endfor %}
+    </div>
+</div>
+{% endmacro %}
+
+{{ carousel("Action Blockbusters",   action,   "fas fa-fire",       "#e50914") }}
+{{ carousel("Top Comedy Hits",       comedy,   "fas fa-face-laugh", "#ffd700") }}
+{{ carousel("Must-Watch Thrillers",  thrillers,"fas fa-skull",      "#9b59b6") }}
+{{ carousel("Bollywood Picks",       hindi,    "fas fa-film",       "#e67e22") }}
+{{ carousel("Global English Cinema", english,  "fas fa-globe",      "#5b8dee") }}
+
+<!-- ─── FOOTER ────────────────────────────────────────── -->
+<footer>
+    <div class="footer-inner">
+
+        <div class="footer-inst">
+            <img src="{{ url_for('static', filename='images/gtu_logo.png') }}" alt="GTU Logo">
+            <p>Gujarat Technological University</p>
         </div>
-    </footer>
+
+        <div class="footer-mid">
+            <div class="footer-brand">MOVIE MATCH AI</div>
+            <div class="footer-sub">Intelligent Content-Based Recommendation System</div>
+            <div class="footer-student">
+                <strong>Sneh Joshi</strong> &nbsp;|&nbsp; Team ID: 969101<br>
+                Department of Information Technology
+            </div>
+            <div class="tech-pills">
+                <span class="tech-pill">Python</span>
+                <span class="tech-pill">Flask</span>
+                <span class="tech-pill">TF-IDF</span>
+                <span class="tech-pill">Cosine Similarity</span>
+                <span class="tech-pill">SQLite</span>
+                <span class="tech-pill">Scikit-learn</span>
+            </div>
+        </div>
+
+        <div class="footer-inst">
+            <img src="{{ url_for('static', filename='images/Ait_logo.png') }}" alt="AIT Logo">
+            <p>Ahmedabad Institute of Technology</p>
+        </div>
+
+    </div>
+    <div class="footer-bottom">
+        &copy; 2026 Final Year Engineering Project &nbsp;·&nbsp; Academic Year 2025–26
+    </div>
+</footer>
+
+<!-- ─── JS ────────────────────────────────────────────── -->
+<script>
+    // Navbar shadow on scroll
+    const nav = document.getElementById('navbar');
+    window.addEventListener('scroll', () => {
+        nav.classList.toggle('scrolled', scrollY > 30);
+    }, { passive: true });
+
+    // Loading state on search
+    const form = document.getElementById('search-form');
+    const btn  = document.getElementById('submit-btn');
+    form && form.addEventListener('submit', () => {
+        btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Finding…';
+        btn.disabled = true;
+    });
+
+    // Stagger cards into view
+    const io = new IntersectionObserver(entries => {
+        entries.forEach((e, i) => {
+            if (e.isIntersecting) {
+                e.target.style.animationDelay = (i * 0.045) + 's';
+                e.target.style.animation = 'rise .42s ease both';
+                io.unobserve(e.target);
+            }
+        });
+    }, { threshold: 0.12 });
+    document.querySelectorAll('.movie-card').forEach(c => io.observe(c));
+</script>
 </body>
 </html>
