@@ -30,26 +30,20 @@ Users can search for any movie in the curated corpus to receive instant content-
 <img width="1900" height="863" alt="image" src="https://github.com/user-attachments/assets/75a4212b-d5f7-4a90-990b-17bb52ea0ccb" />
 <img width="1155" height="810" alt="image" src="https://github.com/user-attachments/assets/09993b63-1005-49ac-9d54-1625766ab07d" />
 
----
-
 ### 2.  Dataset Analytics Dashboard Module
 An interactive dashboard displaying global dataset distribution metrics, top genres across 19 categories, language diversity across 178 spoken languages, and vote-weight histograms.
 
 <img width="1897" height="858" alt="image" src="https://github.com/user-attachments/assets/1454740e-4a91-4df7-9b62-69f49056c743" />
 
----
-
 ### 3. Exploratory Data Analysis (EDA) Module
 Visual breakdown of the data cleaning pipeline: analyzing missing value distributions, filtering mechanisms, and the reduction of 1.16M uncurated records down to the top 10K recommendation corpus.
 
 <img width="1903" height="860" alt="image" src="https://github.com/user-attachments/assets/f7cadd7d-59fd-439f-8c1c-40a1caf2809e" />
----
 
 ### 4.  Application Architecture & Evolution Page
 Documents the full lifecycle of the platform—tracing its growth from a prototype Google Colab notebook to a modular Flask application backed by SQLite3 and precomputed vector stores.
 
 <img width="1901" height="868" alt="image" src="https://github.com/user-attachments/assets/0f7ffc62-366c-488b-bdc8-056680dd38a9" />
----
 
-## Dataset Credits:
-[1]: https://www.kaggle.com/datasets/asaniczka/tmdb-movies-dataset-2023-930k-movies "Full TMDB Movies Dataset 2024 (1M Movies)"
+## Dataset Link:
+https://www.kaggle.com/datasets/asaniczka/tmdb-movies-dataset-2023-930k-movies
